@@ -177,6 +177,56 @@ def run_extraction(
     return _parse_final_json(stdout)
 
 
+def run_readonly_structured(
+    prompt: str, *, system_prompt: str, schema: dict[str, Any], model: str,
+    effort: str = "high", timeout: int = 15 * 60, cwd: Path,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Investigate a repository without writes or network and return a schema-shaped plan.
+
+    Uses the ChatGPT CLI login, ignores user configuration, and never falls back to
+    another provider. Billing data is unavailable from this CLI output.
+    """
+    with tempfile.TemporaryDirectory(prefix="codex-plan-") as scratch:
+        contract, output = Path(scratch) / "schema.json", Path(scratch) / "result.json"
+        contract.write_text(json.dumps(schema))
+        cmd = [resolve_codex_bin(), "exec", "--ignore-user-config", "--ephemeral",
+               "--sandbox", "read-only", "--skip-git-repo-check",
+               "-c", 'approval_policy="never"', "-c", 'web_search="disabled"',
+               "-c", "features.apps=false", "-c", "features.plugins=false",
+               "-C", str(cwd), "--model", model,
+               "-c", f'model_reasoning_effort="{effort}"',
+               "--output-schema", str(contract), "--output-last-message", str(output), "-"]
+        env = {k: os.environ[k] for k in ("HOME", "PATH", "LANG", "TMPDIR") if k in os.environ}
+        proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, start_new_session=True)
+
+        def cancel():
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+        handle = runctx.current()
+        if handle is not None:
+            handle.register_cancel_callback(cancel)
+        try:
+            proc.communicate(system_prompt + "\n\n" + prompt, timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            cancel()
+            proc.communicate()
+            raise CodexError(f"Codex planning timed out after {timeout}s") from exc
+        if proc.returncode or not output.exists():
+            raise CodexError("Codex planning failed or produced no structured result")
+        try:
+            value = json.loads(output.read_text())
+        except (ValueError, OSError) as exc:
+            raise CodexError("Codex planning produced an invalid structured result") from exc
+        if not isinstance(value, dict):
+            raise CodexError("Codex planning must return a JSON object")
+        return value, {"models": [model], "cost_usd": None}
+
+
 def replay_identity():
     """Pin replay to the configured model and an explicit or app-bundled runner."""
     bundled = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
