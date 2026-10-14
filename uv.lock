@@ -110,7 +110,7 @@ wheels = [
 
 [[package]]
 name = "inference-kit"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
@@ -121,7 +121,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.120" },
-    { name = "orbit-jobs", git = "https://github.com/vixtah/orbit-jobs?tag=v0.2.3" },
+    { name = "orbit-jobs", git = "https://github.com/vixtah/orbit-jobs?tag=v0.2.4" },
     { name = "pydantic", specifier = ">=2.12" },
 ]
 
@@ -222,8 +222,8 @@ wheels = [
 
 [[package]]
 name = "orbit-jobs"
-version = "0.2.3"
-source = { git = "https://github.com/vixtah/orbit-jobs?tag=v0.2.3#e8f45a15a483b4c1cf96c960b9d6a4f38f0bbeff" }
+version = "0.2.4"
+source = { git = "https://github.com/vixtah/orbit-jobs?tag=v0.2.4#c1e28bf606c55cc7e70cc8900e67558fea693037" }
 
 [[package]]
 name = "pydantic"

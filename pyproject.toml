@@ -1,13 +1,13 @@
 [project]
 name = "inference-kit"
-version = "0.1.3"
+version = "0.1.4"
 requires-python = ">=3.12"
 dependencies = ["anthropic>=0.120", "pydantic>=2.12", "orbit-jobs"]
 
 [tool.uv.sources]
 # Only orbit_jobs.runctx is used. Keep this tag the same as the apps that install
 # inference-kit use, so uv resolves one orbit-jobs without an override.
-orbit-jobs = { git = "https://github.com/vixtah/orbit-jobs", tag = "v0.2.3" }
+orbit-jobs = { git = "https://github.com/vixtah/orbit-jobs", tag = "v0.2.4" }
 
 [build-system]
 requires = ["hatchling"]
