@@ -56,7 +56,9 @@ def test_claude_start_runs_in_a_terminal_and_asks_for_the_named_branch(monkeypat
     prompt = cmd[2]
     assert prompt.startswith("Fix the bug.")
     assert "git checkout -B claude/fix-7 abc123" in prompt
-    assert "git push -f github claude/fix-7" in prompt and "claude/fix-7-failed" in prompt
+    # the cloud clone's remote is ``origin`` even when ours is called ``github``
+    assert "git fetch origin &&" in prompt and "github" not in prompt
+    assert "git push -f origin claude/fix-7" in prompt and "claude/fix-7-failed" in prompt
     assert f"Builder-Done: {h.token}" in prompt and len(h.token) == 16
     assert "ANTHROPIC_API_KEY" not in tty.calls[0]["env"]
     assert (h.builder, h.id, h.url) == ("claude", "session_01AbC",

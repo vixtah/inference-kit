@@ -198,8 +198,10 @@ class ClaudeCloud:
               base_sha: str | None = None) -> Handle:
         base_sha = base_sha or _git(self.runner, workdir, "rev-parse", "HEAD")
         token = secrets.token_hex(8)
+        # The cloud session's clone names its GitHub remote ``origin``, whatever
+        # this checkout calls it (``self.remote`` is only for our own polling).
         full = prompt.rstrip() + CLAUDE_EPILOGUE.format(
-            branch=branch, base_sha=base_sha, remote=self.remote, trailer=self.trailer(token),
+            branch=branch, base_sha=base_sha, remote="origin", trailer=self.trailer(token),
             failed_branch=self.failed_branch(branch))
         env = {k: v for k, v in os.environ.items()
                if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
